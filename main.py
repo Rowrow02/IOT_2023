@@ -7,7 +7,7 @@ import micropython            # Needed to run any MicroPython code
 import random                 # Random number generator
 from machine import Pin       # Define pin
 import dht
-
+import my_AIO
 #apin = machine.ADC(27)
 #sf = 3.3/65535 
 tempsensor = dht.DHT11(Pin(27))
@@ -19,22 +19,6 @@ RANDOMS_INTERVAL = 20000    # milliseconds
 last_random_sent_ticks = 0  # milliseconds
 led = Pin("LED", Pin.OUT)   # led pin initialization for Raspberry Pi Pico W
  
-# Wireless network
-WIFI_SSID = "Folksam fiendservice"
-WIFI_PASS = "Villejhahjelp" # No this is not our regular password. :)
-
-# Adafruit IO (AIO) configuration
-AIO_SERVER = "io.adafruit.com"
-AIO_PORT = 1883 
-AIO_USER = "roro02"
-AIO_KEY = "aio_AaZz56KLQlAvLIptS0wDm7F3g2sA"
-AIO_CLIENT_ID = ubinascii.hexlify(machine.unique_id())  # Can be anything
-AIO_LIGHTS_FEED = "roro02/feeds/lights"
-AIO_RANDOMS_FEED = "roro02/feeds/random"
-
-# END SETTINGS
-
-
 
 # FUNCTIONS
 
@@ -50,7 +34,7 @@ def do_connect():
         wlan.active(True)                       # Activate network interface
         # set power mode to get WiFi power-saving off (if needed)
         wlan.config(pm = 0xa11140)
-        wlan.connect(WIFI_SSID, WIFI_PASS)  # Your WiFi Credential
+        wlan.connect(my_AIO.WIFI_SSID, my_AIO.WIFI_PASS)  # Your WiFi Credential
         print('Waiting for connection...', end='')
         # Check if it is connected otherwise wait
         while not wlan.isconnected() and wlan.status() >= 0:
@@ -79,13 +63,10 @@ def random_integer(upper_bound):
 
 def measure_temp():
     tempsensor.measure()
-    
-    #adcVal = apin.read_u16()
-    #millivolts = adcVal * sf
-    
+  
     temp = tempsensor.temperature()
     hum = tempsensor.humidity()
-    #temp = millivolts/(10/1000)
+   
     print( temp, hum)
 
     return temp
@@ -98,9 +79,9 @@ def send_temp():
         return; # Too soon since last one sent.
     temp = measure_temp()
 
-    print("Publishing: {0} to {1} ... ".format(temp, AIO_RANDOMS_FEED), end='')
+    print("Publishing: {0} to {1} ... ".format(temp, my_AIO.AIO_RANDOMS_FEED), end='')
     try:
-        client.publish(topic=AIO_RANDOMS_FEED, msg=str(temp))
+        client.publish(topic=my_AIO.AIO_RANDOMS_FEED, msg=str(temp))
         print("DONE")
     except Exception as e:
         print("FAILED")
@@ -116,13 +97,13 @@ except KeyboardInterrupt:
     print("Keyboard interrupt")
 
 # Use the MQTT protocol to connect to Adafruit IO
-client = MQTTClient(AIO_CLIENT_ID, AIO_SERVER, AIO_PORT, AIO_USER, AIO_KEY)
+client = MQTTClient(my_AIO.AIO_CLIENT_ID, my_AIO.AIO_SERVER, my_AIO.AIO_PORT,my_AIO.AIO_USER, my_AIO.AIO_KEY)
 
 # Subscribed messages will be delivered to this callback
 client.set_callback(sub_cb)
 client.connect()
-client.subscribe(AIO_LIGHTS_FEED)
-print("Connected to %s, subscribed to %s topic" % (AIO_SERVER, AIO_LIGHTS_FEED))
+client.subscribe(my_AIO.AIO_LIGHTS_FEED)
+print("Connected to %s, subscribed to %s topic" % (my_AIO.AIO_SERVER, my_AIO.AIO_LIGHTS_FEED))
 
 
 
@@ -141,18 +122,4 @@ finally:                  # If an exception is thrown ...
 
 print("done")
 
-#while True:
-#for i in range(10):
- # millivolts = apin.read_u16()
-#  adc_12b = millivolts*sf
-#  volt = adc_12b * volt_per_adc
-#
-#  dx = abs(50-0)
-#  dy = abs(0-0.5)
-#  shift = volt - 0.5
-#  temp = shift / (dy/dx)
-  
-#  print(temp)
-  
-#  time.sleep(1)
 
