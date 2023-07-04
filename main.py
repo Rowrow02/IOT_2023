@@ -67,7 +67,7 @@ def measure_temp():
     temp = tempsensor.temperature()
     hum = tempsensor.humidity()
    
-    print( temp, hum)
+    
 
     return temp
     
@@ -89,10 +89,11 @@ def send_temp():
         last_random_sent_ticks = time.ticks_ms()
      
 
-
+ 
 # Try Wi0Fi Connection
 try:
     ip = do_connect()
+   
 except KeyboardInterrupt:
     print("Keyboard interrupt")
 
@@ -120,6 +121,6 @@ finally:                  # If an exception is thrown ...
     client = None
     print("Disconnected from Adafruit IO.")
 
-print("done")
+#print("done")
 
 
